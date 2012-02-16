@@ -38,29 +38,14 @@ import org.slf4j.LoggerFactory
  * @author Andres Almiray
  */
 @Singleton
-class DataSourceConnector {
+class DataSourceConnector implements DataSourceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(DataSourceConnector)
-
-    static void enhance(MetaClass mc) {
-        mc.withSql = {Closure closure ->
-            DataSourceHolder.instance.withSql('default', closure)
-        }
-        mc.withSql << {String datasourceName, Closure closure ->
-            DataSourceHolder.instance.withSql(datasourceName, closure)
-        }
-        mc.withSql << {CallableWithArgs callable ->
-            DataSourceHolder.instance.withSql('default', callable)
-        }
-        mc.withSql << {String datasourceName, CallableWithArgs callable ->
-            DataSourceHolder.instance.withSql(datasourceName, callable)
-        }
-    }
 
     Object withSql(String dataSourceName = 'default', Closure closure) {
         DataSourceHolder.instance.withSql(datasourceName, closure)
     }
 
-    Object withSql(String dataSourceName = 'default', CallableWithArgs callable) {
+    public <T> T withSql(String dataSourceName = 'default', CallableWithArgs<T> callable) {
         DataSourceHolder.instance.withSql(datasourceName, callable)
     }
 

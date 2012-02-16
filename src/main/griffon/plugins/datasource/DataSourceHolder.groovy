@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
  * @author Andres Almiray
  */
 @Singleton
-class DataSourceHolder {
+class DataSourceHolder implements DataSourceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(DataSourceHolder)
     private static final Object[] LOCK = new Object[0]
     private final Map<String, DataSource> dataSources = [:]
@@ -64,7 +64,7 @@ class DataSourceHolder {
         }
     }
 
-    Object withSql(String dataSourceName = 'default', CallableWithArgs callable) {
+    public <T> T withSql(String dataSourceName = 'default', CallableWithArgs<T> callable) {
         DataSource ds = fetchDataSource(dataSourceName)
         if(LOG.debugEnabled) LOG.debug("Executing SQL statement on datasource '$dataSourceName'")
         Connection connection = ds.getConnection()

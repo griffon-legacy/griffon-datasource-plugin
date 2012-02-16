@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2009-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,17 @@
  * @author Andres Almiray
  */
 
-includeTargets << griffonScript("_GriffonInit")
 includeTargets << griffonScript("_GriffonCreateArtifacts")
- 
-// check to see if we already have a DatasourceGriffonAddon
-configText = '''root.'DatasourceGriffonAddon'.addon=true'''
-if(!(builderConfigFile.text.contains(configText))) {
-    println 'Adding DatasourceGriffonAddon to Builder.groovy'
-    builderConfigFile.text += '\n' + configText + '\n'
-}
 
 argsMap = argsMap ?: [:]
 argsMap.skipPackagePrompt = true
 
 if(!new File("${basedir}/griffon-app/conf/DataSource.groovy").exists()) {
    createArtifact(
-      name: "DataSource",
+      name:   "DataSource",
       suffix: "",
-      type: "DataSource",
-      path: "griffon-app/conf")
+      type:   "DataSource",
+      path:   "griffon-app/conf")
 }
 
 printFramed("""You may need to create an schema.ddl file depending on your settings.
