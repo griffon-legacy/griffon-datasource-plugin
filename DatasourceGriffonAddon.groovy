@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import griffon.core.GriffonClass
 import griffon.core.GriffonApplication
 import griffon.plugins.datasource.DataSourceHolder
 import griffon.plugins.datasource.DataSourceConnector
@@ -23,15 +24,18 @@ import griffon.plugins.datasource.DataSourceEnhancer
  * @author Andres Almiray
  */
 class DatasourceGriffonAddon {
+    void addonPostInit(GriffonApplication app) {
+        def types = app.config.griffon?.datasource?.injectInto ?: ['controller']
+        for(String type : types) {
+            for(GriffonClass gc : app.artifactManager.getClassesOfType(type)) {
+                DataSourceEnhancer.enhance(gc.metaClass)
+            }
+        }
+    }
+    
     def events = [
         BeforeWeld: { beans ->
             beans.dataSource = DataSourceHolder.instance.getDataSource('default')
-        },
-        NewInstance: { klass, type, instance ->
-            def types = app.config.griffon?.datasource?.injectInto ?: ['controller']
-            if(!types.contains(type)) return
-            def mc = app.artifactManager.findGriffonClass(klass).metaClass
-            DataSourceEnhancer.enhance(mc)
         }
     ]
 

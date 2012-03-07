@@ -16,14 +16,19 @@
 package griffon.plugins.datasource
 
 import griffon.util.CallableWithArgs
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * @author Andres Almiray
  */
 final class DataSourceEnhancer {
+    private static final Logger LOG = LoggerFactory.getLogger(DataSourceEnhancer)
+
     private DataSourceEnhancer() {}
     
     static void enhance(MetaClass mc, DataSourceProvider provider = DataSourceHolder.instance) {
+        if(LOG.debugEnabled) LOG.debug("Enhancing $mc with $provider")
         mc.withSql = {Closure closure ->
             provider.withSql('default', closure)
         }

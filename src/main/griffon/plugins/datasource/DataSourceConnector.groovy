@@ -122,6 +122,7 @@ class DataSourceConnector implements DataSourceProvider {
         }
         if(!ddl) {
             LOG.error("DataSource[${dataSourceName}].dbCreate was set to 'create' but no suitable schema was found in classpath.")
+            return
         }
 
         boolean tokenizeddl = config.tokenizeddl ?: false
