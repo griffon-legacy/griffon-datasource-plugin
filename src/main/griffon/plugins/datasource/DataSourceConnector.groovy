@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2009-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.apache.commons.dbcp.DriverManagerConnectionFactory
 import griffon.core.GriffonApplication
 import griffon.util.Environment
 import griffon.util.CallableWithArgs
+import griffon.util.ConfigUtils
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -52,8 +53,7 @@ class DataSourceConnector implements DataSourceProvider {
     // ======================================================
 
     ConfigObject createConfig(GriffonApplication app) {
-        def dataSourceClass = app.class.classLoader.loadClass('DataSource')
-        new ConfigSlurper(Environment.current.name).parse(dataSourceClass)
+        ConfigUtils.loadConfigWithI18n('DataSource')
     }
 
     private ConfigObject narrowConfig(ConfigObject config, String dataSourceName) {

@@ -7,8 +7,8 @@ griffon.project.dependency.resolution = {
     }
     dependencies {
         compile('commons-dbcp:commons-dbcp:1.4',
-                'commons-pool:commons-pool:1.5.6',
-                'com.h2database:h2:1.3.164') {
+                'commons-pool:commons-pool:1.6',
+                'com.h2database:h2:1.3.168') {
             transitive = false
         }
     }

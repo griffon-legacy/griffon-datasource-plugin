@@ -26,7 +26,7 @@ final class DataSourceEnhancer {
     private static final Logger LOG = LoggerFactory.getLogger(DataSourceEnhancer)
 
     private DataSourceEnhancer() {}
-    
+
     static void enhance(MetaClass mc, DataSourceProvider provider = DataSourceHolder.instance) {
         if(LOG.debugEnabled) LOG.debug("Enhancing $mc with $provider")
         mc.withSql = {Closure closure ->

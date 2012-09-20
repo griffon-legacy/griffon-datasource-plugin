@@ -32,8 +32,8 @@ class DatasourceGriffonAddon {
             }
         }
     }
-    
-    def events = [
+
+    Map events = [
         BeforeWeld: { beans ->
             beans.dataSource = DataSourceHolder.instance.getDataSource('default')
         }

@@ -19,9 +19,9 @@
  */
 class DatasourceGriffonPlugin {
     // the plugin version
-    String version = '0.3'
+    String version = '0.4'
     // the version or versions of Griffon the plugin is designed for
-    String griffonVersion = '0.9.5 > *'
+    String griffonVersion = '1.1.0 > *'
     // the other plugins this plugin depends on
     Map dependsOn = [:]
     // resources that are included in plugin packaging
@@ -62,19 +62,20 @@ giving you access to a `groovy.sql.Sql` object, with which you'll be able
 to make calls to the dataSource. Remember to make all dataSource calls off the EDT
 otherwise your application may appear unresponsive when doing long computations
 inside the EDT.
+
 This method is aware of multiple dataSources. If no dataSourceName is specified when calling
 it then the default dataSource will be selected. Here are two example usages, the first
 queries against the default dataSource while the second queries a dataSource whose name has
 been configured as 'internal'
 
-	package sample
-	class SampleController {
-	    def queryAllDataSources = {
-	        withSql { dataSourceName, sql -> ... }
-	        withSql('internal') { dataSourceName, sql -> ... }
-	    }
-	}
-	
+    package sample
+    class SampleController {
+        def queryAllDataSources = {
+            withSql { dataSourceName, sql -> ... }
+            withSql('internal') { dataSourceName, sql -> ... }
+        }
+    }
+    
 This method is also accessible to any component through the singleton `griffon.plugins.datasource.DataSourceConnector`.
 You can inject these methods to non-artifacts via metaclasses. Simply grab hold of a particular metaclass and call
 `DataSourceEnhancer.enhance(metaClassInstance, datasourceProviderInstance)`.
@@ -153,9 +154,9 @@ fails regardless of the arguments it receives
 
     class MyDataSourceProvider implements DataSourceProvider {
         Object withSql(String dataSourceName = 'default', Closure closure) { null }
-        public <T> T withSql(String dataSourceName = 'default', CallableWithArgs<T> callable) { null }      
+        public <T> T withSql(String dataSourceName = 'default', CallableWithArgs<T> callable) { null }
     }
-    
+
 This implementation may be used in the following way
 
     class MyServiceTests extends GriffonUnitTestCase {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2009-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ class DataSourceHolder implements DataSourceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(DataSourceHolder)
     private static final Object[] LOCK = new Object[0]
     private final Map<String, DataSource> dataSources = [:]
-  
+
     String[] getDataSourceNames() {
         List<String> dataSourceNames = new ArrayList().addAll(dataSources.keySet())
         dataSourceNames.toArray(new String[dataSourceNames.size()])
@@ -50,7 +50,7 @@ class DataSourceHolder implements DataSourceProvider {
 
     void setDataSource(String dataSourceName = 'default', DataSource ds) {
         if(isBlank(dataSourceName)) dataSourceName = 'default'
-        storeDataSource(dataSourceName, ds)       
+        storeDataSource(dataSourceName, ds)
     }
 
     Object withSql(String dataSourceName = 'default', Closure closure) {
@@ -74,15 +74,15 @@ class DataSourceHolder implements DataSourceProvider {
             connection.close()
         }
     }
-    
+
     boolean isDataSourceConnected(String dataSourceName) {
         if(isBlank(dataSourceName)) dataSourceName = 'default'
         retrieveDataSource(dataSourceName) != null
     }
-    
+
     void disconnectDataSource(String dataSourceName) {
         if(isBlank(dataSourceName)) dataSourceName = 'default'
-        storeDataSource(dataSourceName, null)        
+        storeDataSource(dataSourceName, null)
     }
 
     private DataSource fetchDataSource(String dataSourceName) {
