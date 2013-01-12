@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package griffon.plugins.datasource;
-
-import griffon.util.CallableWithArgs;
-import groovy.lang.Closure;
+package dsld
 
 /**
  * @author Andres Almiray
  */
-public interface DataSourceProvider {
-    <R> R withSql(Closure<R> closure);
 
-    <R> R withSql(String dataSourceName, Closure<R> closure);
-
-    <R> R withSql(CallableWithArgs<R> callable);
-
-    <R> R withSql(String dataSourceName, CallableWithArgs<R> callable);
+contribute(enclosingClass(annotatedBy('griffon.plugins.datasource.DataSourceAware'))) {
+    provider = "DataSource DSL"
+    delegatesTo "griffon.plugins.datasource.DataSourceContributionHandler"
 }

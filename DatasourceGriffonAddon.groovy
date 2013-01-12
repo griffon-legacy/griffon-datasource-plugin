@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 the original author or authors.
+ * Copyright 2009-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 import griffon.core.GriffonClass
 import griffon.core.GriffonApplication
 import griffon.plugins.datasource.DataSourceHolder
-import griffon.plugins.datasource.DataSourceConnector
 import griffon.plugins.datasource.DataSourceEnhancer
+import griffon.plugins.datasource.DataSourceContributionHandler
 
 /**
  * @author Andres Almiray
@@ -28,6 +28,7 @@ class DatasourceGriffonAddon {
         def types = app.config.griffon?.datasource?.injectInto ?: ['controller']
         for(String type : types) {
             for(GriffonClass gc : app.artifactManager.getClassesOfType(type)) {
+                if (DataSourceContributionHandler.isAssignableFrom(gc.clazz)) continue
                 DataSourceEnhancer.enhance(gc.metaClass)
             }
         }

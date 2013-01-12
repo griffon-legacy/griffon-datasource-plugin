@@ -16,18 +16,24 @@
 
 package griffon.plugins.datasource;
 
-import griffon.util.CallableWithArgs;
-import groovy.lang.Closure;
+import javax.sql.DataSource;
 
 /**
  * @author Andres Almiray
  */
-public interface DataSourceProvider {
-    <R> R withSql(Closure<R> closure);
+public class DefaultDataSourceProvider extends AbstractDataSourceProvider {
+    private static final DefaultDataSourceProvider INSTANCE;
 
-    <R> R withSql(String dataSourceName, Closure<R> closure);
+    static {
+        INSTANCE = new DefaultDataSourceProvider();
+    }
 
-    <R> R withSql(CallableWithArgs<R> callable);
+    public static DefaultDataSourceProvider getInstance() {
+        return INSTANCE;
+    }
 
-    <R> R withSql(String dataSourceName, CallableWithArgs<R> callable);
+    @Override
+    protected DataSource getDataSource(String dataSourceName) {
+        return DataSourceHolder.getInstance().fetchDataSource(dataSourceName);
+    }
 }

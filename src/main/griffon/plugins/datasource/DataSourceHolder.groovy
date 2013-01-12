@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 the original author or authors.
+ * Copyright 2009-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,77 +16,58 @@
 
 package griffon.plugins.datasource
 
-import groovy.sql.Sql
-
-import java.sql.Connection
 import javax.sql.DataSource
 
 import griffon.core.GriffonApplication
 import griffon.util.ApplicationHolder
-import griffon.util.CallableWithArgs
 import static griffon.util.GriffonNameUtils.isBlank
-
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /**
  * @author Andres Almiray
  */
-@Singleton
-class DataSourceHolder implements DataSourceProvider {
-    private static final Logger LOG = LoggerFactory.getLogger(DataSourceHolder)
+class DataSourceHolder {
+    private static final String DEFAULT = 'default'
     private static final Object[] LOCK = new Object[0]
     private final Map<String, DataSource> dataSources = [:]
 
+    private static final DataSourceHolder INSTANCE
+
+    static {
+        INSTANCE = new DataSourceHolder()
+    }
+
+    static DataSourceHolder getInstance() {
+        INSTANCE
+    }
+
     String[] getDataSourceNames() {
-        List<String> dataSourceNames = new ArrayList().addAll(dataSources.keySet())
+        List<String> dataSourceNames = new ArrayList<String>()
+        dataSourceNames.addAll(dataSources.keySet())
         dataSourceNames.toArray(new String[dataSourceNames.size()])
     }
 
-    DataSource getDataSource(String dataSourceName = 'default') {
-        if(isBlank(dataSourceName)) dataSourceName = 'default'
+    DataSource getDataSource(String dataSourceName = DEFAULT) {
+        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
         retrieveDataSource(dataSourceName)
     }
 
-    void setDataSource(String dataSourceName = 'default', DataSource ds) {
-        if(isBlank(dataSourceName)) dataSourceName = 'default'
+    void setDataSource(String dataSourceName = DEFAULT, DataSource ds) {
+        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
         storeDataSource(dataSourceName, ds)
     }
 
-    Object withSql(String dataSourceName = 'default', Closure closure) {
-        DataSource ds = fetchDataSource(dataSourceName)
-        if(LOG.debugEnabled) LOG.debug("Executing SQL statement on datasource '$dataSourceName'")
-        Connection connection = ds.getConnection()
-        try {
-            return closure(dataSourceName, new Sql(connection))
-        } finally {
-            connection.close()
-        }
-    }
-
-    public <T> T withSql(String dataSourceName = 'default', CallableWithArgs<T> callable) {
-        DataSource ds = fetchDataSource(dataSourceName)
-        if(LOG.debugEnabled) LOG.debug("Executing SQL statement on datasource '$dataSourceName'")
-        Connection connection = ds.getConnection()
-        try {
-            return callable.call([dataSourceName, new Sql(connection)] as Object[])
-        } finally {
-            connection.close()
-        }
-    }
-
     boolean isDataSourceConnected(String dataSourceName) {
-        if(isBlank(dataSourceName)) dataSourceName = 'default'
+        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
         retrieveDataSource(dataSourceName) != null
     }
 
     void disconnectDataSource(String dataSourceName) {
-        if(isBlank(dataSourceName)) dataSourceName = 'default'
+        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
         storeDataSource(dataSourceName, null)
     }
 
-    private DataSource fetchDataSource(String dataSourceName) {
-        if(isBlank(dataSourceName)) dataSourceName = 'default'
+    DataSource fetchDataSource(String dataSourceName) {
+        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
         DataSource ds = retrieveDataSource(dataSourceName)
         if(ds == null) {
             GriffonApplication app = ApplicationHolder.application

@@ -22,7 +22,11 @@ import groovy.lang.Closure;
 /**
  * @author Andres Almiray
  */
-public interface DataSourceProvider {
+public interface DataSourceContributionHandler {
+    void setDataSourceProvider(DataSourceProvider provider);
+
+    DataSourceProvider getDataSourceProvider();
+
     <R> R withSql(Closure<R> closure);
 
     <R> R withSql(String dataSourceName, Closure<R> closure);

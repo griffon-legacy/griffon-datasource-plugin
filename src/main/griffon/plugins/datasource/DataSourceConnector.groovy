@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 the original author or authors.
+ * Copyright 2009-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package griffon.plugins.datasource
 
-import groovy.sql.Sql
-
-import java.sql.Connection
 import javax.sql.DataSource
 
 import org.apache.commons.pool.ObjectPool
@@ -29,7 +26,6 @@ import org.apache.commons.dbcp.DriverManagerConnectionFactory
 
 import griffon.core.GriffonApplication
 import griffon.util.Environment
-import griffon.util.CallableWithArgs
 import griffon.util.ConfigUtils
 
 import org.slf4j.Logger
@@ -39,28 +35,19 @@ import org.slf4j.LoggerFactory
  * @author Andres Almiray
  */
 @Singleton
-class DataSourceConnector implements DataSourceProvider {
+class DataSourceConnector {
+    private static final String DEFAULT = 'default'
     private static final Logger LOG = LoggerFactory.getLogger(DataSourceConnector)
-
-    Object withSql(String dataSourceName = 'default', Closure closure) {
-        DataSourceHolder.instance.withSql(datasourceName, closure)
-    }
-
-    public <T> T withSql(String dataSourceName = 'default', CallableWithArgs<T> callable) {
-        DataSourceHolder.instance.withSql(datasourceName, callable)
-    }
-
-    // ======================================================
 
     ConfigObject createConfig(GriffonApplication app) {
         ConfigUtils.loadConfigWithI18n('DataSource')
     }
 
     private ConfigObject narrowConfig(ConfigObject config, String dataSourceName) {
-        return dataSourceName == 'default' ? config.dataSource : config.dataSources[dataSourceName]
+        return dataSourceName == DEFAULT ? config.dataSource : config.dataSources[dataSourceName]
     }
 
-    DataSource connect(GriffonApplication app, ConfigObject config, String dataSourceName = 'default') {
+    DataSource connect(GriffonApplication app, ConfigObject config, String dataSourceName = DEFAULT) {
         if (DataSourceHolder.instance.isDataSourceConnected(dataSourceName)) {
             return DataSourceHolder.instance.getDataSource(dataSourceName)
         }
@@ -70,12 +57,12 @@ class DataSourceConnector implements DataSourceProvider {
         DataSource ds = createDataSource(config, dataSourceName)
         DataSourceHolder.instance.setDataSource(dataSourceName, ds)
         def skipSchema = config.schema?.skip ?: false
-        if (!skipSchema) createSchema(config, dataSourceName)
+        if (!skipSchema) createSchema(app, config, dataSourceName)
         app.event('DataSourceConnectEnd', [dataSourceName, ds])
         ds
     }
 
-    void disconnect(GriffonApplication app, ConfigObject config, String dataSourceName = 'default') {
+    void disconnect(GriffonApplication app, ConfigObject config, String dataSourceName = DEFAULT) {
         if (DataSourceHolder.instance.isDataSourceConnected(dataSourceName)) {
             config = narrowConfig(config, dataSourceName)
             app.event('DataSourceDisconnectStart', [config, dataSourceName, DataSourceHolder.instance.getDataSource(dataSourceName)])
@@ -106,7 +93,7 @@ class DataSourceConnector implements DataSourceProvider {
         new PoolingDataSource(connectionPool)
     }
 
-    private void createSchema(ConfigObject config, String dataSourceName) {
+    private void createSchema(GriffonApplication app, ConfigObject config, String dataSourceName) {
         String dbCreate = config.dbCreate.toString()
         if (dbCreate != 'create') return
 
@@ -126,7 +113,7 @@ class DataSourceConnector implements DataSourceProvider {
         }
 
         boolean tokenizeddl = config.tokenizeddl ?: false
-        DataSourceHolder.instance.withSql(dataSourceName) { dsName, sql ->
+        resolveDataSourceProvider(app).withSql(dataSourceName) { dsName, sql ->
             if (!tokenizeddl) {
                 sql.execute(ddl.text)
             } else {
@@ -135,6 +122,18 @@ class DataSourceConnector implements DataSourceProvider {
                 }
             }
         }
+    }
+
+    DataSourceProvider resolveDataSourceProvider(GriffonApplication app) {
+        def dataSourceProvider = app.config.dataSourceProvider
+        if (dataSourceProvider instanceof Class) {
+            dataSourceProvider = dataSourceProvider.newInstance()
+            app.config.dataSourceProvider = dataSourceProvider
+        } else if (!dataSourceProvider) {
+            dataSourceProvider = DefaultDataSourceProvider.instance
+            app.config.dataSourceProvider = dataSourceProvider
+        }
+        dataSourceProvider
     }
 
     private String getEnvironmentShortName() {

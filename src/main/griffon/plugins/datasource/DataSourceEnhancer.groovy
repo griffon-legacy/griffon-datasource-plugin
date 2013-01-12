@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package griffon.plugins.datasource
 
 import griffon.util.CallableWithArgs
@@ -23,20 +24,21 @@ import org.slf4j.LoggerFactory
  * @author Andres Almiray
  */
 final class DataSourceEnhancer {
+    private static final String DEFAULT = 'default'
     private static final Logger LOG = LoggerFactory.getLogger(DataSourceEnhancer)
 
     private DataSourceEnhancer() {}
-
-    static void enhance(MetaClass mc, DataSourceProvider provider = DataSourceHolder.instance) {
+    
+    static void enhance(MetaClass mc, DataSourceProvider provider = DefaultDataSourceProvider.instance) {
         if(LOG.debugEnabled) LOG.debug("Enhancing $mc with $provider")
         mc.withSql = {Closure closure ->
-            provider.withSql('default', closure)
+            provider.withSql(DEFAULT, closure)
         }
         mc.withSql << {String dataSourceName, Closure closure ->
             provider.withSql(dataSourceName, closure)
         }
         mc.withSql << {CallableWithArgs callable ->
-            provider.instance.withSql('default', callable)
+            provider.withSql(DEFAULT, callable)
         }
         mc.withSql << {String dataSourceName, CallableWithArgs callable ->
             provider.withSql(dataSourceName, callable)

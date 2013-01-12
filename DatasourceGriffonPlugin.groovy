@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 the original author or authors.
+ * Copyright 2009-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@
  */
 class DatasourceGriffonPlugin {
     // the plugin version
-    String version = '0.5'
+    String version = '1.0.0'
     // the version or versions of Griffon the plugin is designed for
-    String griffonVersion = '1.1.0 > *'
+    String griffonVersion = '1.2.0 > *'
     // the other plugins this plugin depends on
-    Map dependsOn = [:]
+    Map dependsOn = [lombok: '0.4']
     // resources that are included in plugin packaging
     List pluginIncludes = []
     // the plugin license
@@ -58,15 +58,15 @@ Upon installation the plugin will generate the following artifacts in `$appdir/g
  * DataSource.groovy - contains the dataSource definitions.
 
 A new dynamic method named `withSql` will be injected into all controllers,
-giving you access to a `groovy.sql.Sql` object, with which you'll be able
-to make calls to the dataSource. Remember to make all dataSource calls off the EDT
-otherwise your application may appear unresponsive when doing long computations
-inside the EDT.
+giving you access to a `groovy.sql.Sql` object, with which you'll be able to
+make calls to the repository. Remember to make all repository calls off the UI
+thread otherwise your application may appear unresponsive when doing long
+computations inside the UI thread.
 
-This method is aware of multiple dataSources. If no dataSourceName is specified when calling
-it then the default dataSource will be selected. Here are two example usages, the first
-queries against the default dataSource while the second queries a dataSource whose name has
-been configured as 'internal'
+This method is aware of multiple dataSources. If no dataSourceName is specified
+when calling it then the default dataSource will be selected. Here are two
+example usages, the first queries against the default dataSource while the second
+queries a dataSource whose name has been configured as 'internal'
 
     package sample
     class SampleController {
@@ -75,47 +75,72 @@ been configured as 'internal'
             withSql('internal') { dataSourceName, sql -> ... }
         }
     }
-    
-This method is also accessible to any component through the singleton `griffon.plugins.datasource.DataSourceConnector`.
-You can inject these methods to non-artifacts via metaclasses. Simply grab hold of a particular metaclass and call
-`DataSourceEnhancer.enhance(metaClassInstance, datasourceProviderInstance)`.
+
+The following list enumerates all the variants of the injected method
+
+ * `<R> R withSql(Closure<R> stmts)`
+ * `<R> R withSql(CallableWithArgs<R> stmts)`
+ * `<R> R withSql(String dataSourceName, Closure<R> stmts)`
+ * `<R> R withSql(String dataSourceName, CallableWithArgs<R> stmts)`
+
+These methods are also accessible to any component through the singleton
+`griffon.plugins.datasource.DataSourceEnhancer`. You can inject these methods to
+non-artifacts via metaclasses. Simply grab hold of a particular metaclass and
+call `DataSourceEnhancer.enhance(metaClassInstance)`.
 
 ### JMX support
 
-This plugin exposes the default dataSource if the [JMX plugin][1] is installed. The name used is `:service=datasource`.
+This plugin exposes the default dataSource if the [JMX plugin][1] is installed.
+The name used is `:service=datasource`.
 
 ### Spring Support
 
-The default dataSource bean is available under the name `dataSource` if the [Spring plugin][2] is installed.
+The default dataSource bean is available under the name `dataSource` if the
+[Spring plugin][2] is installed.
 
 ### Weld Support
 
-The default dataSource bean is available under the name `dataSource` if the [Weld plugin][3] is installed.
+The default dataSource bean is available under the name `dataSource` if the
+[Weld plugin][3] is installed.
 
 Configuration
 -------------
-### Dynamic method injection
+### DataSourceAware AST Transformation
 
-The `withSql()` dynamic method will be added to controllers by default. You can
+The preferred way to mark a class for method injection is by annotating it with
+`@griffon.plugins.datasource.DataSourceAware`. This transformation injects the
+`griffon.plugins.datasource.DataSourceContributionHandler` interface and default
+behavior that fulfills the contract.
+
+### Dynamic Method Injection
+
+Dynamic methods will be added to controllers by default. You can
 change this setting by adding a configuration flag in `griffon-app/conf/Config.groovy`
 
     griffon.datasource.injectInto = ['controller', 'service']
+
+Dynamic method injection will be skipped for classes implementing
+`griffon.plugins.datasource.DataSourceContributionHandler`.
 
 ### Events
 
 The following events will be triggered by this addon
 
- * DataSourceConnectStart[config, dataSourceName] - triggered before connecting to the dataSource
- * DataSourceConnectEnd[dataSourceName, dataSource] - triggered after connecting to the dataSource
- * DataSourceDisconnectStart[config, dataSourceName, dataSource] - triggered before disconnecting from the dataSource
- * DataSourceDisconnectEnd[config, dataSourceName] - triggered after disconnecting from the dataSource
+ * DataSourceConnectStart[config, dataSourceName] - triggered before connecting
+   to the dataSource
+ * DataSourceConnectEnd[dataSourceName, dataSource] - triggered after connecting
+   to the dataSource
+ * DataSourceDisconnectStart[config, dataSourceName, dataSource] - triggered
+   before disconnecting from the dataSource
+ * DataSourceDisconnectEnd[config, dataSourceName] - triggered after disconnecting
+   from the dataSource
 
 ### Multiple DataSources
 
-The config file `DataSource.groovy` defines a default dataSource block. As the name
-implies this is the dataSource used by default, however you can configure named dataSources
-by adding a new config block. For example connecting to a dataSource whose name is 'internal'
-can be done in this way
+The config file `DataSource.groovy` defines a default dataSource block. As the
+name implies this is the dataSource used by default, however you can configure
+named dataSources by adding a new config block. For example connecting to a 
+dataSource whose name is 'internal' can be done in this way
 
     dataSources {
         internal {
@@ -138,23 +163,29 @@ default dataSource block is used.
 
 Testing
 -------
-The `withSql()` dynamic method will not be automatically injected during unit testing, because addons are simply not initialized
-for this kind of tests. However you can use `DataSourceEnhancer.enhance(metaClassInstance, datasourceProviderInstance)` where 
-`datasourceProviderInstance` is of type `griffon.plugins.datasource.DataSourceProvider`. The contract for this interface looks like this
+
+Dynamic methods will not be automatically injected during unit testing, because
+addons are simply not initialized for this kind of tests. However you can use
+`DataSourceEnhancer.enhance(metaClassInstance, datasourceProviderInstance)` where
+`datasourceProviderInstance` is of type `griffon.plugins.datasource.DataSourceProvider`.
+The contract for this interface looks like this
 
     public interface DataSourceProvider {
-        Object withSql(Closure closure);
-        Object withSql(String dataSourceName, Closure closure);
-        <T> T withSql(CallableWithArgs<T> callable);
-        <T> T withSql(String dataSourceName, CallableWithArgs<T> callable);
+        <R> R withSql(Closure<R> closure);
+        <R> R withSql(CallableWithArgs<R> callable);
+        <R> R withSql(String dataSourceName, Closure<R> closure);
+        <R> R withSql(String dataSourceName, CallableWithArgs<R> callable);
     }
 
-It's up to you define how these methods need to be implemented for your tests. For example, here's an implementation that never
-fails regardless of the arguments it receives
+It's up to you define how these methods need to be implemented for your tests.
+For example, here's an implementation that never fails regardless of the
+arguments it receives
 
     class MyDataSourceProvider implements DataSourceProvider {
-        Object withSql(String dataSourceName = 'default', Closure closure) { null }
-        public <T> T withSql(String dataSourceName = 'default', CallableWithArgs<T> callable) { null }
+        public <R> R withSql(Closure<R> closure) { null }
+        public <R> R withSql(CallableWithArgs<R> callable) { null }
+        public <R> R withSql(String dataSourceName, Closure<R> closure) { null }
+        public <R> R withSql(String dataSourceName, CallableWithArgs<R> callable) { null }
     }
 
 This implementation may be used in the following way
@@ -167,9 +198,96 @@ This implementation may be used in the following way
         }
     }
 
+On the other hand, if the service is annotated with `@DataSourceAware` then usage
+of `DataSourceEnhancer` should be avoided at all costs. Simply set
+`datasourceProviderInstance` on the service instance directly, like so, first the
+service definition
+
+    @griffon.plugins.datasource.DataSourceAware
+    class MyService {
+        def serviceMethod() { ... }
+    }
+
+Next is the test
+
+    class MyServiceTests extends GriffonUnitTestCase {
+        void testSmokeAndMirrors() {
+            MyService service = new MyService()
+            service.datasourceProvider = new MyDataSourceProvider()
+            // exercise service methods
+        }
+    }
+
+Tool Support
+------------
+
+### DSL Descriptors
+
+This plugin provides DSL descriptors for Intellij IDEA and Eclipse (provided
+you have the Groovy Eclipse plugin installed). These descriptors are found
+inside the `griffon-datasource-compile-x.y.z.jar`, with locations
+
+ * dsdl/datasource.dsld
+ * gdsl/datasource.gdsl
+
+### Lombok Support
+
+Rewriting Java AST in a similar fashion to Groovy AST transformations is
+possible thanks to the [lombok][4] plugin.
+
+#### JavaC
+
+Support for this compiler is provided out-of-the-box by the command line tools.
+There's no additional configuration required.
+
+#### Eclipse
+
+Follow the steps found in the [Lombok][4] plugin for setting up Eclipse up to
+number 5.
+
+ 6. Go to the path where the `lombok.jar` was copied. This path is either found
+    inside the Eclipse installation directory or in your local settings. Copy
+    the following file from the project's working directory
+
+         $ cp $USER_HOME/.griffon/<version>/projects/<project>/plugins/datasource-<version>/dist/griffon-datasource-compile-<version>.jar .
+
+ 6. Edit the launch script for Eclipse and tweak the boothclasspath entry so
+    that includes the file you just copied
+
+        -Xbootclasspath/a:lombok.jar:lombok-pg-<version>.jar:\
+        griffon-lombok-compile-<version>.jar:griffon-datasource-compile-<version>.jar
+
+ 7. Launch Eclipse once more. Eclipse should be able to provide content assist
+    for Java classes annotated with `@DataSourceAware`.
+
+#### NetBeans
+
+Follow the instructions found in [Annotation Processors Support in the NetBeans
+IDE, Part I: Using Project Lombok][5]. You may need to specify
+`lombok.core.AnnotationProcessor` in the list of Annotation Processors.
+
+NetBeans should be able to provide code suggestions on Java classes annotated
+with `@DataSourceAware`.
+
+#### Intellij IDEA
+
+Follow the steps found in the [Lombok][4] plugin for setting up Intellij IDEA
+up to number 5.
+
+ 6. Copy `griffon-datasource-compile-<version>.jar` to the `lib` directory
+
+         $ pwd
+           $USER_HOME/Library/Application Support/IntelliJIdea11/lombok-plugin
+         $ cp $USER_HOME/.griffon/<version>/projects/<project>/plugins/datasource-<version>/dist/griffon-datasource-compile-<version>.jar lib
+
+ 7. Launch IntelliJ IDEA once more. Code completion should work now for Java
+    classes annotated with `@DataSourceAware`.
+
 
 [1]: /plugin/jmx
 [2]: /plugin/spring
 [3]: /plugin/weld
+[4]: /plugin/lombok
+[5]: http://netbeans.org/kb/docs/java/annotations-lombok.html
 '''
 }

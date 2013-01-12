@@ -1,2 +1,6 @@
 target
 release_notes.md
+.idea
+datasource-griffonPluginFixes.iml
+datasource-griffonPlugins.iml
+datasource.iml
