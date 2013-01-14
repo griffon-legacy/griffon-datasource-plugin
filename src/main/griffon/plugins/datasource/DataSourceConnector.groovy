@@ -40,7 +40,10 @@ class DataSourceConnector {
     private static final Logger LOG = LoggerFactory.getLogger(DataSourceConnector)
 
     ConfigObject createConfig(GriffonApplication app) {
-        ConfigUtils.loadConfigWithI18n('DataSource')
+        if (!app.config.pluginConfig.datasource) {
+            app.config.pluginConfig.datasource = ConfigUtils.loadConfigWithI18n('DataSource')
+        }
+        app.config.pluginConfig.datasource
     }
 
     private ConfigObject narrowConfig(ConfigObject config, String dataSourceName) {
@@ -139,8 +142,8 @@ class DataSourceConnector {
     private String getEnvironmentShortName() {
         switch(Environment.current) {
             case Environment.DEVELOPMENT: return 'dev'
-            case Environment.TEST: return 'test'
-            case Environment.PRODUCTION: return 'prod'
+            case Environment.TEST:        return 'test'
+            case Environment.PRODUCTION:  return 'prod'
             default: return Environment.current.name
         }
     }
