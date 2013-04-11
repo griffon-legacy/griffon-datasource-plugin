@@ -47,7 +47,12 @@ class DataSourceConnector {
     }
 
     private ConfigObject narrowConfig(ConfigObject config, String dataSourceName) {
-        return dataSourceName == DEFAULT ? config.dataSource : config.dataSources[dataSourceName]
+        if (config.containsKey('dataSource') && dataSourceName == DEFAULT) {
+            return config.dataSource
+        } else if (config.containsKey('dataSources')) {
+            return config.dataSources[dataSourceName]
+        }
+        return config
     }
 
     DataSource connect(GriffonApplication app, ConfigObject config, String dataSourceName = DEFAULT) {
@@ -110,7 +115,7 @@ class DataSourceConnector {
                 break
             }
         }
-        if(!ddl) {
+        if (!ddl) {
             LOG.error("DataSource[${dataSourceName}].dbCreate was set to 'create' but no suitable schema was found in classpath.")
             return
         }

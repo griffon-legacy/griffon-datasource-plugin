@@ -18,6 +18,7 @@ import griffon.core.GriffonClass
 import griffon.core.GriffonApplication
 import griffon.plugins.datasource.DataSourceHolder
 import griffon.plugins.datasource.DataSourceEnhancer
+import griffon.plugins.datasource.DataSourceConnector
 import griffon.plugins.datasource.DataSourceContributionHandler
 
 /**
@@ -25,6 +26,7 @@ import griffon.plugins.datasource.DataSourceContributionHandler
  */
 class DatasourceGriffonAddon {
     void addonPostInit(GriffonApplication app) {
+        DataSourceConnector.instance.createConfig(app)
         def types = app.config.griffon?.datasource?.injectInto ?: ['controller']
         for(String type : types) {
             for(GriffonClass gc : app.artifactManager.getClassesOfType(type)) {

@@ -47,35 +47,35 @@ class DataSourceHolder {
     }
 
     DataSource getDataSource(String dataSourceName = DEFAULT) {
-        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
+        if (isBlank(dataSourceName)) dataSourceName = DEFAULT
         retrieveDataSource(dataSourceName)
     }
 
     void setDataSource(String dataSourceName = DEFAULT, DataSource ds) {
-        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
+        if (isBlank(dataSourceName)) dataSourceName = DEFAULT
         storeDataSource(dataSourceName, ds)
     }
 
     boolean isDataSourceConnected(String dataSourceName) {
-        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
+        if (isBlank(dataSourceName)) dataSourceName = DEFAULT
         retrieveDataSource(dataSourceName) != null
     }
 
     void disconnectDataSource(String dataSourceName) {
-        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
+        if (isBlank(dataSourceName)) dataSourceName = DEFAULT
         storeDataSource(dataSourceName, null)
     }
 
     DataSource fetchDataSource(String dataSourceName) {
-        if(isBlank(dataSourceName)) dataSourceName = DEFAULT
+        if (isBlank(dataSourceName)) dataSourceName = DEFAULT
         DataSource ds = retrieveDataSource(dataSourceName)
-        if(ds == null) {
+        if (ds == null) {
             GriffonApplication app = ApplicationHolder.application
             ConfigObject config = DataSourceConnector.instance.createConfig(app)
             ds = DataSourceConnector.instance.connect(app, config, dataSourceName)
         }
         
-        if(ds == null) {
+        if (ds == null) {
             throw new IllegalArgumentException("No such DataSource configuration for name $dataSourceName")
         }
         ds

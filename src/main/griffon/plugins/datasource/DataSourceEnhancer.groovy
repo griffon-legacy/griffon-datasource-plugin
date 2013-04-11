@@ -30,7 +30,7 @@ final class DataSourceEnhancer {
     private DataSourceEnhancer() {}
     
     static void enhance(MetaClass mc, DataSourceProvider provider = DefaultDataSourceProvider.instance) {
-        if(LOG.debugEnabled) LOG.debug("Enhancing $mc with $provider")
+        if (LOG.debugEnabled) LOG.debug("Enhancing $mc with $provider")
         mc.withSql = {Closure closure ->
             provider.withSql(DEFAULT, closure)
         }
