@@ -40,6 +40,8 @@ class DataSourceHolder {
         INSTANCE
     }
 
+    private DataSourceHolder() {}
+
     String[] getDataSourceNames() {
         List<String> dataSourceNames = new ArrayList<String>()
         dataSourceNames.addAll(dataSources.keySet())

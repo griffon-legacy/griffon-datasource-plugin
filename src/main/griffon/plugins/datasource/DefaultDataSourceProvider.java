@@ -32,6 +32,8 @@ public class DefaultDataSourceProvider extends AbstractDataSourceProvider {
         return INSTANCE;
     }
 
+    private DefaultDataSourceProvider() {}
+
     @Override
     protected DataSource getDataSource(String dataSourceName) {
         return DataSourceHolder.getInstance().fetchDataSource(dataSourceName);

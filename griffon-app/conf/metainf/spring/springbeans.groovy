@@ -3,6 +3,6 @@ import griffon.spring.factory.support.ObjectFactoryBean
 
 beans = {
     'dataSource'(ObjectFactoryBean) {
-        object = DataSourceHolder.instance.getDataSource('default')
+        object = DataSourceHolder.instance.fetchDataSource('default')
     }
 }
